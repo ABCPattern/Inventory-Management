@@ -1,0 +1,21 @@
+{
+  "name": "rethinkdb-2.3.6",
+  "version": "1.0.0",
+  "description": "",
+  "main": "sample.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "author": "anushka",
+  "license": "ISC",
+  "devDependencies": {
+    "nodemon": "^2.0.22"
+  },
+  "dependencies": {
+    "mathjs": "^11.8.0",
+    "restify": "^11.1.0",
+    "rethinkdb": "^2.4.2",
+    "thinky": "^2.3.9"
+  }
+}

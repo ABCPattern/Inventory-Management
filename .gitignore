@@ -1,0 +1,11 @@
+#Ignore node_modules directory
+node_modules/
+
+#Ignore package lock file
+package-lock.json
+
+#Ignore RethinkDB data directory
+rethinkdb_data/
+
+#Ignore RethinkDB executable file
+rethinkdb.exe
