@@ -50,7 +50,7 @@ exports.adduser = async (req, res) => {
 
 exports.getuser = async (req, res) => {
     const conn = await connection
-    const data = await r.db(config.dbname).table(tablename).map(function(doc){
+    const data = await r.db(config.dbname).table(tablename).map(function (doc) {
         return doc.without('password')
     }).coerceTo('array').run(conn)
     if (data) {
@@ -179,7 +179,7 @@ exports.add_to_cart = async (req, res) => {
 
 exports.getcartstate = async (req, res) => {
     const conn = await connection
-    const data = await r.db(config.dbname).table(tablename).getAll(req.params.state, { index: 'findcartstate' }).map(function(doc){
+    const data = await r.db(config.dbname).table(tablename).getAll(req.params.state, { index: 'findcartstate' }).map(function (doc) {
         return doc.without('password')
     }).coerceTo('array').run(conn)
     if (data) {
@@ -197,5 +197,66 @@ exports.getcartstate = async (req, res) => {
             message: "Error occured while retrieving data"
         })
         return
+    }
+}
+
+exports.removefromcart = async (req, res) => {
+    const conn = await connection
+    const id = req.params.id
+    const productid = req.query.productid
+    let flag = 0
+    const userinfo = await r.db(config.dbname).table(tablename).get(id).run(conn)
+    if (!userinfo) {
+        res.status(403)
+        res.json({
+            success: false,
+            message: "User not found"
+        })
+        return
+    }
+    else if (userinfo.cart_state === "empty") {
+        res.status(403)
+        res.json({
+            success: false,
+            message: "Cart is empty"
+        })
+        return
+    }
+    else {
+        for (let i = 0; i < userinfo.cart.length; i++) {
+            if (userinfo.cart[i].productid == productid) {
+                flag = 1
+                console.log("sdgf")
+                const updateuser = await r.db(config.dbname).table(tablename).get(id)
+                    .update({
+                        cart: r.row('cart').difference([userinfo.cart[i]])
+                    })
+                    .run(conn)
+                if(updateuser){
+                    res.status(200)
+                    res.json({
+                        success:true,
+                        message:"Product removed successfully"
+                    })
+                    return
+                }
+                else{
+                    res.status(500)
+                    res.josn({
+                        success:false,
+                        message:"Error occured while removing element"
+                    })
+                    return
+                }
+            }
+        }
+        if(flag != 1){
+            res.status(403)
+            res.json({
+                success:false,
+                message:"Product not found in cart"
+            })
+            return
+        }
     }
 }

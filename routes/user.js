@@ -10,4 +10,6 @@ module.exports = server => {
     server.post('/add-to-cart/:id', [controller.add_to_cart])
 
     server.get('/getcartstate/:state', [controller.getcartstate])
+
+    server.put('/remove-from-cart/:id', [controller.removefromcart])
 }
