@@ -127,6 +127,16 @@ exports.add_to_cart = async (req, res) => {
             return
         }
         else {
+            for(let i = 0;i<user.cart.length;i++){
+                if(user.cart[i].productid == productid){
+                    res.status(403)
+                    res.json({
+                        success:false,
+                        message:"Cannot add same product again"
+                    })
+                    return
+                }
+            }
             const price = prod.price
             const newstock = prod.stock - quantity
             const newcartitem = getcart(productid, quantity, price)
@@ -204,59 +214,159 @@ exports.removefromcart = async (req, res) => {
     const conn = await connection
     const id = req.params.id
     const productid = req.query.productid
-    let flag = 0
-    const userinfo = await r.db(config.dbname).table(tablename).get(id).run(conn)
-    if (!userinfo) {
+    const prodinfo = await r.db(config.dbname).table('product').get(productid).run(conn)
+    if (!prodinfo) {
         res.status(403)
         res.json({
             success: false,
-            message: "User not found"
-        })
-        return
-    }
-    else if (userinfo.cart_state === "empty") {
-        res.status(403)
-        res.json({
-            success: false,
-            message: "Cart is empty"
+            message: "Product not found"
         })
         return
     }
     else {
-        for (let i = 0; i < userinfo.cart.length; i++) {
-            if (userinfo.cart[i].productid == productid) {
-                flag = 1
-                console.log("sdgf")
-                const updateuser = await r.db(config.dbname).table(tablename).get(id)
-                    .update({
-                        cart: r.row('cart').difference([userinfo.cart[i]])
-                    })
-                    .run(conn)
-                if(updateuser){
-                    res.status(200)
-                    res.json({
-                        success:true,
-                        message:"Product removed successfully"
-                    })
-                    return
-                }
-                else{
-                    res.status(500)
-                    res.josn({
-                        success:false,
-                        message:"Error occured while removing element"
-                    })
-                    return
-                }
-            }
-        }
-        if(flag != 1){
+        let flag = 0
+        const userinfo = await r.db(config.dbname).table(tablename).get(id).run(conn)
+        if (!userinfo) {
             res.status(403)
             res.json({
-                success:false,
-                message:"Product not found in cart"
+                success: false,
+                message: "User not found"
             })
             return
         }
+        else if (userinfo.cart_state === "empty") {
+            res.status(403)
+            res.json({
+                success: false,
+                message: "Cart is empty"
+            })
+            return
+        }
+        else {
+            for (let i = 0; i < userinfo.cart.length; i++) {
+                if (userinfo.cart[i].productid == productid) {
+                    flag = 1
+                    console.log("sdgf")
+                    const updateuser = await r.db(config.dbname).table(tablename).get(id)
+                        .update({
+                            cart: r.row('cart').difference([userinfo.cart[i]])
+                        })
+                        .run(conn)
+                    if (updateuser) {
+                        res.status(200)
+                        res.json({
+                            success: true,
+                            message: "Product removed successfully"
+                        })
+                        return
+                    }
+                    else {
+                        res.status(500)
+                        res.josn({
+                            success: false,
+                            message: "Error occured while removing element"
+                        })
+                        return
+                    }
+                }
+            }
+            if (flag != 1) {
+                res.status(403)
+                res.json({
+                    success: false,
+                    message: "Product not found in cart"
+                })
+                return
+            }
+        }
     }
+
+}
+
+exports.updateQuantity = async (req, res) => {
+    const conn = await connection
+    const id = req.params.id
+    
+    const productid = req.query.productid
+    const prodinfo = await r.db(config.dbname).table('product').get(productid).run(conn)
+    if (!prodinfo) {
+        res.status(403)
+        res.json({
+            success: false,
+            message: "Product not found"
+        })
+        return
+    }
+    else {
+        const Quantity = req.body.quantity
+        let flag = 0
+        const userinfo = await r.db(config.dbname).table(tablename).get(id).run(conn)
+        if (!userinfo) {
+            res.status(403)
+            res.json({
+                success: false,
+                message: "User not found"
+            })
+            return
+        }
+        else if (userinfo.cart_state === "empty") {
+            res.status(403)
+            res.json({
+                success: false,
+                message: "Cart is empty"
+            })
+            return
+        }
+        else {
+            for (let i = 0; i < userinfo.cart.length; i++) {
+                if (userinfo.cart[i].productid == productid) {
+                    flag = 1
+                    // console.log("sdgf")
+                    console.log(prodinfo.price)
+                    const newcartitem = getcart(productid, Quantity, prodinfo.price)
+                    const updateuser = await r.db(config.dbname).table(tablename).get(id)
+                        .update(function(row){
+                            return {
+                                cart: row('cart')
+                                .map(function(element){
+                                    return r.branch(
+                                        element.eq(userinfo.cart[i]),
+                                        newcartitem,
+                                        element
+                                    )
+                                    
+                                })
+                        }
+                            
+                        })
+                        .run(conn)
+                    if (updateuser) {
+                        res.status(200)
+                        res.json({
+                            success: true,
+                            message: "Quantity updated successfully"
+                        })
+                        return
+                    }
+                    else {
+                        res.status(500)
+                        res.josn({
+                            success: false,
+                            message: "Error occured while removing element"
+                        })
+                        return
+                    }
+                }
+            }
+            if (flag != 1) {
+                res.status(403)
+                res.json({
+                    success: false,
+                    message: "Product not found in cart"
+                })
+                return
+            }
+        }
+    }
+
 }

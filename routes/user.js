@@ -12,4 +12,6 @@ module.exports = server => {
     server.get('/getcartstate/:state', [controller.getcartstate])
 
     server.put('/remove-from-cart/:id', [controller.removefromcart])
+
+    server.put('/update-quantity/:id', [controller.updateQuantity])
 }

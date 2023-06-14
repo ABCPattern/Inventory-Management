@@ -2,9 +2,8 @@ const restify = require('restify')
 const config = require('./config')
 const r = require('rethinkdb')
 const connection = require('./connect')
+
 const server = restify.createServer()
-
-
 
 //Middleware
 server.use(restify.plugins.bodyParser({ mapParams: true }))
