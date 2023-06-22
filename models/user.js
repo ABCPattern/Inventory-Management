@@ -26,6 +26,12 @@ createIndex = async () =>{
           }).run(conn)
         await r.db(config.dbname).table(tablename).indexWait('findcartstate').run(conn)    
     }
+    if(!indexlist.includes('byusername')){
+        await r.db(config.dbname).table(tablename).indexCreate('byusername', function(doc) {
+            return doc('username')
+          }).run(conn)
+        await r.db(config.dbname).table(tablename).indexWait('byusername').run(conn) 
+    }
     
 }
 

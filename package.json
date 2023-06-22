@@ -13,6 +13,9 @@
     "nodemon": "^2.0.22"
   },
   "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.0",
+    "lodash": "^4.17.21",
     "mathjs": "^11.8.0",
     "restify": "^11.1.0",
     "rethinkdb": "^2.4.2",

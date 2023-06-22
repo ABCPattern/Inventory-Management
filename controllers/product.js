@@ -72,7 +72,7 @@ exports.delproduct = async (req, res) => {
     const id = req.params.id
     const prod = await r.db(config.dbname).table(tablename).get(id).run(conn)
     if (!prod) {
-        res.status(403)
+        res.status(404)
         res.json({
             success: false,
             message: "Product not found"
@@ -107,7 +107,7 @@ exports.updateproduct = async (req, res) => {
     const id = req.params.id
     const prod = await r.db('inventory').table(tablename).get(id).run(conn)
     if (!prod) {
-        res.status(403)
+        res.status(404)
         res.json({
             success: false,
             message: "Product not found"

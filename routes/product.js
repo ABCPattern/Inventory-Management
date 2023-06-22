@@ -1,11 +1,11 @@
 const controller = require('../controllers/product')
 
 module.exports = server =>{
-    server.post('/addproduct', [controller.addproduct])
+    server.post('/product', [controller.addproduct])
 
-    server.get('/getproduct', [controller.getproduct])
+    server.get('/product', [controller.getproduct])
 
-    server.del('/delproduct/:id', [controller.delproduct])
+    server.del('/product/:id', [controller.delproduct])
 
-    server.put('/updateproduct/:id', [controller.updateproduct])
+    server.put('/product/:id', [controller.updateproduct])
 }

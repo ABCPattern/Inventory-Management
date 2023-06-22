@@ -1,7 +1,12 @@
 const controller = require('../controllers/bill')
+const auth = require('../authentication')
 
 module.exports = server =>{
-    server.post('/generate-bill/:id', [controller.generatebill])
+    server.post('/generate-bill/:id', [
+        auth.validJWTNeeded,
+        controller.generatebill])
 
-    server.get('/getbillhistory/:id', [controller.getbill])
+    server.get('/bill/history/:id', [
+        auth.validJWTNeeded,
+        controller.getbill])
 }

@@ -11,7 +11,7 @@ exports.generatebill = async (req, res) => {
     const id = req.params.id
     const user = await r.db(config.dbname).table('user').get(id).run(conn)
     if (!user) {
-        res.status(403)
+        res.status(404)
         res.json({
             success: false,
             message: "User not found"
@@ -89,7 +89,7 @@ exports.getbill = async (req, res) => {
     const id = req.params.id
     const userinfo = await r.db(config.dbname).table('user').get(id).run(conn)
     if (!userinfo) {
-        res.status(403)
+        res.status(404)
         res.json({
             success: false,
             message: "User not found"
@@ -107,7 +107,7 @@ exports.getbill = async (req, res) => {
             return
         }
         else {
-            res.status(403)
+            res.status(404)
             res.json({
                 success: false,
                 message: "User has not purchased yet!"

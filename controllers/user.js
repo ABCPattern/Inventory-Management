@@ -1,42 +1,77 @@
 const User = require('../models/user')
+const bcrypt = require('bcryptjs')
 const Product = require('../models/product')
 const getcart = require('../models/cart')
 const r = require('rethinkdb')
 const connection = require('../connect')
 const config = require('../config')
+const user = require('../routes/user')
 const tablename = "user"
 
 
 exports.adduser = async (req, res) => {
     const conn = await connection
-    const details = {
-        "name": req.body.name,
-        "username": req.body.username,
-        "password": req.body.password
+    const saltrounds = 10
+    const password = req.body.password
+    const existusername = await r.db(config.dbname).table(tablename).getAll(req.body.username, { index: 'byusername' }).map(function (doc) {
+        return doc.without('password')
+    }).coerceTo('array').run(conn)
+    if (existusername[0]) {
+        if (existusername[0].username == req.body.username) {
+            res.status(400)
+            res.json({
+                success: false,
+                message: `${req.body.username} already exists`
+            })
+            return
+        }
     }
 
-    const newuser = new User(details)
     try {
-        const result = await r.db(config.dbname).table(tablename).insert(
-            newuser
-        )
-            .run(conn)
-        if (result) {
-            res.status(201)
+        const salt = await bcrypt.genSalt(saltrounds)
+        if (!salt) {
+            res.status(500)
             res.json({
-                success: true,
-                message: "User created successfully"
+                success: false,
+                message: "Error occured while registration"
             })
             return
         }
         else {
-            res.status(500)
-            res.json({
-                success: false,
-                message: `Error occured while inserting user ${err}`
-            })
-            return
+            const hash = await bcrypt.hash(password, salt)
+            if (!hash) {
+                res.status(500)
+                res.json({
+                    success: false,
+                    message: "Error occured while registration"
+                })
+                return
+            }
+            req.body.password = hash;
+            const details = req.body
+            const newuser = new User(details)
+            const result = await r.db(config.dbname).table(tablename).insert(
+                newuser
+            )
+                .run(conn)
+            if (result) {
+                res.status(201)
+                res.json({
+                    success: true,
+                    message: "User created successfully"
+                })
+                return
+            }
+            else {
+                res.status(500)
+                res.json({
+                    success: false,
+                    message: `Error occured while inserting user ${err}`
+                })
+                return
+            }
         }
+
     }
     catch (err) {
         res.status(500)
@@ -72,6 +107,8 @@ exports.getuser = async (req, res) => {
 }
 
 exports.getinfo = async (req, res) => {
+    // const username = req.header('refershtoken')
+
     const conn = await connection
     const id = req.params.id
     const userinfo = await r.db(config.dbname).table(tablename).get(id).run(conn)
@@ -95,12 +132,20 @@ exports.getinfo = async (req, res) => {
 
 exports.add_to_cart = async (req, res) => {
     const conn = await connection
+    if (req.query.quantity == 0) {
+        res.status(403)
+        res.json({
+            success: false,
+            message: "Please select quantity"
+        })
+        return
+    }
     const id = req.params.id
     const productid = req.query.productid
-    const quantity = req.query.quantity
+    const quantity = req.query.quantity || 1
     const user = await r.db(config.dbname).table(tablename).get(id).run(conn)
     if (!user) {
-        res.status(403)
+        res.status(404)
         res.json({
             success: false,
             message: "User not found"
@@ -110,7 +155,7 @@ exports.add_to_cart = async (req, res) => {
     const prod = await r.db(config.dbname).table('product').get(productid).run(conn)
     // console.log(prod.price)
     if (!prod) {
-        res.status(403)
+        res.status(404)
         res.json({
             success: false,
             message: "Product not found"
@@ -119,7 +164,7 @@ exports.add_to_cart = async (req, res) => {
     }
     else {
         if (quantity > prod.stock) {
-            res.status(403)
+            res.status(404)
             res.json({
                 success: false,
                 message: "Not available in stock"
@@ -127,12 +172,12 @@ exports.add_to_cart = async (req, res) => {
             return
         }
         else {
-            for(let i = 0;i<user.cart.length;i++){
-                if(user.cart[i].productid == productid){
+            for (let i = 0; i < user.cart.length; i++) {
+                if (user.cart[i].productid == productid) {
                     res.status(403)
                     res.json({
-                        success:false,
-                        message:"Cannot add same product again"
+                        success: false,
+                        message: "Cannot add same product again"
                     })
                     return
                 }
@@ -216,7 +261,7 @@ exports.removefromcart = async (req, res) => {
     const productid = req.query.productid
     const prodinfo = await r.db(config.dbname).table('product').get(productid).run(conn)
     if (!prodinfo) {
-        res.status(403)
+        res.status(404)
         res.json({
             success: false,
             message: "Product not found"
@@ -227,7 +272,7 @@ exports.removefromcart = async (req, res) => {
         let flag = 0
         const userinfo = await r.db(config.dbname).table(tablename).get(id).run(conn)
         if (!userinfo) {
-            res.status(403)
+            res.status(404)
             res.json({
                 success: false,
                 message: "User not found"
@@ -243,15 +288,27 @@ exports.removefromcart = async (req, res) => {
             return
         }
         else {
+            let updateuser
             for (let i = 0; i < userinfo.cart.length; i++) {
                 if (userinfo.cart[i].productid == productid) {
                     flag = 1
+                    if (userinfo.cart.length == 1) {
+                        updateuser = await r.db(config.dbname).table(tablename).get(id)
+                            .update({
+                                cart: r.row('cart').difference([userinfo.cart[i]]),
+                                cart_state: "empty"
+                            })
+                            .run(conn)
+                    }
+                    else {
+                        updateuser = await r.db(config.dbname).table(tablename).get(id)
+                            .update({
+                                cart: r.row('cart').difference([userinfo.cart[i]])
+                            })
+                            .run(conn)
+                    }
                     console.log("sdgf")
-                    const updateuser = await r.db(config.dbname).table(tablename).get(id)
-                        .update({
-                            cart: r.row('cart').difference([userinfo.cart[i]])
-                        })
-                        .run(conn)
+
                     if (updateuser) {
                         res.status(200)
                         res.json({
@@ -271,7 +328,7 @@ exports.removefromcart = async (req, res) => {
                 }
             }
             if (flag != 1) {
-                res.status(403)
+                res.status(404)
                 res.json({
                     success: false,
                     message: "Product not found in cart"
@@ -286,11 +343,12 @@ exports.removefromcart = async (req, res) => {
 exports.updateQuantity = async (req, res) => {
     const conn = await connection
     const id = req.params.id
-    
+
     const productid = req.query.productid
     const prodinfo = await r.db(config.dbname).table('product').get(productid).run(conn)
+    console.log(prodinfo)
     if (!prodinfo) {
-        res.status(403)
+        res.status(404)
         res.json({
             success: false,
             message: "Product not found"
@@ -302,7 +360,7 @@ exports.updateQuantity = async (req, res) => {
         let flag = 0
         const userinfo = await r.db(config.dbname).table(tablename).get(id).run(conn)
         if (!userinfo) {
-            res.status(403)
+            res.status(404)
             res.json({
                 success: false,
                 message: "User not found"
@@ -310,7 +368,7 @@ exports.updateQuantity = async (req, res) => {
             return
         }
         else if (userinfo.cart_state === "empty") {
-            res.status(403)
+            res.status(404)
             res.json({
                 success: false,
                 message: "Cart is empty"
@@ -318,29 +376,64 @@ exports.updateQuantity = async (req, res) => {
             return
         }
         else {
+            let updateuser
             for (let i = 0; i < userinfo.cart.length; i++) {
                 if (userinfo.cart[i].productid == productid) {
                     flag = 1
+                    const newquantity = userinfo.cart[i].Quantity- Quantity
                     // console.log("sdgf")
-                    console.log(prodinfo.price)
-                    const newcartitem = getcart(productid, Quantity, prodinfo.price)
-                    const updateuser = await r.db(config.dbname).table(tablename).get(id)
-                        .update(function(row){
-                            return {
-                                cart: row('cart')
-                                .map(function(element){
-                                    return r.branch(
-                                        element.eq(userinfo.cart[i]),
-                                        newcartitem,
-                                        element
-                                    )
-                                    
+                    if (Quantity == 0) {
+                        if (userinfo.cart.length == 1) {
+                            updateuser = await r.db(config.dbname).table(tablename).get(id)
+                                .update({
+                                    cart: r.row('cart').difference([userinfo.cart[i]]),
+                                    cart_state: "empty"
                                 })
+                                .run(conn)
+                                
                         }
-                            
-                        })
-                        .run(conn)
+                        else {
+                            updateuser = await r.db(config.dbname).table(tablename).get(id)
+                                .update({
+                                    cart: r.row('cart').difference([userinfo.cart[i]])
+                                })
+                                .run(conn)
+                        }
+                    }
+                    else {
+                        const newcartitem = getcart(productid, Quantity, prodinfo.price)
+                        updateuser = await r.db(config.dbname).table(tablename).get(id)
+                            .update(function (row) {
+                                return {
+                                    cart: row('cart')
+                                        .map(function (element) {
+                                            return r.branch(
+                                                element.eq(userinfo.cart[i]),
+                                                newcartitem,
+                                                element
+                                            )
+
+                                        })
+                                }
+
+                            })
+                            .run(conn)
+                    }
+
+
                     if (updateuser) {
+                        console.log(prodinfo.stock+newquantity)
+                        const result = await r.db(config.dbname).table('product').get(productid).update({
+                            stock : prodinfo.stock+newquantity
+                        }).run(conn)
+                        if(!result){
+                            res.status(500)
+                            res.json({
+                                success:false,
+                                message:"Internal server error occured while updating the quantity"
+                            })
+                            return
+                        }
                         res.status(200)
                         res.json({
                             success: true,
@@ -359,7 +452,7 @@ exports.updateQuantity = async (req, res) => {
                 }
             }
             if (flag != 1) {
-                res.status(403)
+                res.status(404)
                 res.json({
                     success: false,
                     message: "Product not found in cart"
