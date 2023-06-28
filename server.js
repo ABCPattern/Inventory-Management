@@ -2,6 +2,7 @@ const restify = require('restify')
 const config = require('./config')
 const r = require('rethinkdb')
 const connection = require('./connect')
+const logger = require('./logger')
 
 const server = restify.createServer()
 
@@ -13,11 +14,15 @@ server.use(restify.plugins.queryParser())
 const productRoutes = require('./routes/product')
 const userRoutes = require('./routes/user')
 const billRoutes = require('./routes/bill')
+const logsRoutes = require('./routes/activity_logs')
+const mailsRoutes = require('./routes/mail')
 
 productRoutes(server)
 userRoutes(server)
 billRoutes(server)
+logsRoutes(server)
+mailsRoutes(server)
 
 server.listen(config.PORT, () => {
-    console.info(`api is running on port ${config.PORT}`);
+    console.log(JSON.stringify(`api is running on port ${config.PORT}`));
 })

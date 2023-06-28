@@ -148,7 +148,7 @@ exports.add_to_cart = async (req, res) => {
         res.status(404)
         res.json({
             success: false,
-            message: "User not found"
+            message: "User does not exist"
         })
         return
     }
@@ -158,7 +158,7 @@ exports.add_to_cart = async (req, res) => {
         res.status(404)
         res.json({
             success: false,
-            message: "Product not found"
+            message: "Product does not exist"
         })
         return
     }
@@ -264,7 +264,7 @@ exports.removefromcart = async (req, res) => {
         res.status(404)
         res.json({
             success: false,
-            message: "Product not found"
+            message: "Product does not exist"
         })
         return
     }
@@ -275,7 +275,7 @@ exports.removefromcart = async (req, res) => {
             res.status(404)
             res.json({
                 success: false,
-                message: "User not found"
+                message: "User does not exist"
             })
             return
         }
@@ -351,7 +351,7 @@ exports.updateQuantity = async (req, res) => {
         res.status(404)
         res.json({
             success: false,
-            message: "Product not found"
+            message: "Product does not exist"
         })
         return
     }
@@ -363,7 +363,7 @@ exports.updateQuantity = async (req, res) => {
             res.status(404)
             res.json({
                 success: false,
-                message: "User not found"
+                message: "User does not exist"
             })
             return
         }

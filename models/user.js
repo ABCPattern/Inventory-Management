@@ -13,6 +13,7 @@ let user = thinky.createModel("user", {
     name : type.string(),
     username: type.string(),
     password: type.string(),
+    role: type.string(),
     cart: type.array().default([]),
     cart_state: type.string().default("empty").validator(validateoptions, ['empty', 'pending', 'ordered'])
 })

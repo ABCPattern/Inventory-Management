@@ -13,12 +13,17 @@
     "nodemon": "^2.0.22"
   },
   "dependencies": {
+    "axios": "^1.4.0",
     "bcryptjs": "^2.4.3",
     "jsonwebtoken": "^9.0.0",
     "lodash": "^4.17.21",
     "mathjs": "^11.8.0",
+    "nodemailer": "^6.9.3",
     "restify": "^11.1.0",
     "rethinkdb": "^2.4.2",
-    "thinky": "^2.3.9"
+    "thinky": "^2.3.9",
+    "winston": "^3.9.0",
+    "winston-papertrail": "^1.0.5",
+    "winston-syslog": "^2.7.0"
   }
 }

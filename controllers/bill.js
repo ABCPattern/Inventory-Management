@@ -4,6 +4,7 @@ const Bill = require('../models/bill')
 const r = require('rethinkdb')
 const connection = require('../connect')
 const config = require('../config')
+const logger = require('../logger')
 const tablename = "bill"
 
 exports.generatebill = async (req, res) => {
@@ -14,7 +15,7 @@ exports.generatebill = async (req, res) => {
         res.status(404)
         res.json({
             success: false,
-            message: "User not found"
+            message: "User does not exist"
         })
         return
     }
@@ -46,6 +47,7 @@ exports.generatebill = async (req, res) => {
                     })
                     .run(conn)
                 if (updatecart) {
+                    logger.info(JSON.stringify(newbill))
                     res.status(201)
                     res.json({
                         success: true,
@@ -92,7 +94,7 @@ exports.getbill = async (req, res) => {
         res.status(404)
         res.json({
             success: false,
-            message: "User not found"
+            message: "User does not exist"
         })
         return
     }

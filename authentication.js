@@ -6,6 +6,8 @@ const connection = require('./connect')
 const bcrypt = require('bcryptjs')
 const r = require('rethinkdb')
 const tablename = "user"
+const logger = require('./logger')
+const { re } = require('mathjs')
 
 exports.isPasswordMatch = async (req, res) => {
     const conn = await connection
@@ -13,30 +15,27 @@ exports.isPasswordMatch = async (req, res) => {
     const username = req.body.username
     const user = await r.db(config.dbname).table(tablename).getAll(username, { index: 'byusername' }).coerceTo('array').run(conn)
     if (!user[0]) {
-        res.status(400)
+        res.status(401)
         res.json({
-            message: "User not found"
+            message: "User does not exist"
         })
         return
     }
     else {
-        bcrypt.compare(enteredpassword, user[0].password, (err, result) => {
-            if (err) {
-                res.status(401)
-                res.send("Incorrect password")
-            }
-            if (result) {
-                return
-            }
-            else {
-                res.status(401)
-                res.send('Incorrect password')
-            }
+        const result = await bcrypt.compare(enteredpassword, user[0].password)
+        if (result) {
+            return
         }
-        )
+        else {
+            res.status(401)
+            res.send("Incorrect password")
+            return
+        } 
     }
-
+        
 }
+
+
 
 exports.login = async (req, res) => {
     try {
@@ -59,7 +58,9 @@ exports.login = async (req, res) => {
             })
             return
         }
-        res.status(201)
+        logger.info(JSON.stringify(`${req.body.username} logged in successfully!`))
+        res.status(200)
+
         res.json({ success: true, accessToken: token, refreshToken: refresh_token })
         return
     } catch (error) {
