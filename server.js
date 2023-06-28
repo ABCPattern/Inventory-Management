@@ -15,13 +15,13 @@ const productRoutes = require('./routes/product')
 const userRoutes = require('./routes/user')
 const billRoutes = require('./routes/bill')
 const logsRoutes = require('./routes/activity_logs')
-const mailsRoutes = require('./routes/mail')
+// const mailsRoutes = require('./routes/mail')
 
 productRoutes(server)
 userRoutes(server)
 billRoutes(server)
 logsRoutes(server)
-mailsRoutes(server)
+// mailsRoutes(server)
 
 server.listen(config.PORT, () => {
     console.log(JSON.stringify(`api is running on port ${config.PORT}`));
