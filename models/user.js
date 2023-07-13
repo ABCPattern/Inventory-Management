@@ -2,7 +2,7 @@ var thinky = require('thinky')({db:'inventory'})
 var type = thinky.type
 const r = require('rethinkdb')
 const config = require('../config')
-const connection = require('../connect')
+const connection = require('../rethinkdbconnect')
 const tablename = "user"
 
 function validateoptions(value, options){

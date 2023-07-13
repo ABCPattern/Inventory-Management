@@ -1,11 +1,12 @@
 const restify = require('restify')
 const config = require('./config')
 const r = require('rethinkdb')
-const connection = require('./connect')
+const connection = require('./rethinkdbconnect')
 const logger = require('./logger')
+// const elastic_connection = require('./elasticsearchconnect')
+
 
 const server = restify.createServer()
-
 //Middleware
 server.use(restify.plugins.bodyParser({ mapParams: true }))
 server.use(restify.plugins.queryParser())

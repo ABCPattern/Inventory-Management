@@ -3,7 +3,7 @@ var type = thinky.type
 const r = require('rethinkdb')
 const date = new Date(Date.now())
 const config = require('../config')
-const connection = require('../connect')
+const connection = require('../rethinkdbconnect')
 const tablename = "bill"
 
 let bill = thinky.createModel("bill", {

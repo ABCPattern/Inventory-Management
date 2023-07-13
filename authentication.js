@@ -2,7 +2,7 @@ const jwt = require('jsonwebtoken')
 const config = require('./config')
 const lodash = require('lodash')
 const User = require('./models/user')
-const connection = require('./connect')
+const connection = require('./rethinkdbconnect')
 const bcrypt = require('bcryptjs')
 const r = require('rethinkdb')
 const tablename = "user"
@@ -79,7 +79,9 @@ exports.validJWTNeeded = (req, res, next) => {
                 console.log(authorization[0])
                 return res.status(401).send();
             } else {
+                console.log(authorization[1])
                 req.decodetoken = jwt.verify(authorization[1], config.secret)
+                console.log(req.decodetoken.username)
                 next()
             }
         } catch (err) {

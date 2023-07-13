@@ -1,6 +1,6 @@
 const Product = require('../models/product')
 const r = require('rethinkdb')
-const connection = require('../connect')
+const connection = require('../rethinkdbconnect')
 const config = require('../config')
 const tablename = "product"
 const logger = require('../logger')

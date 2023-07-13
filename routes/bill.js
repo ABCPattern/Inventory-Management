@@ -9,4 +9,8 @@ module.exports = server =>{
     server.get('/bill/history/:id', [
         auth.validJWTNeeded,
         controller.getbill])
+
+    // server.get('/bill/history', [
+    //     controller.getbill
+    // ])
 }

@@ -4,4 +4,6 @@ const controller = require('../controllers/activity_logs')
 
 module.exports = server => {
     server.get('/activity', controller.getlogs)
+
+    
 }
